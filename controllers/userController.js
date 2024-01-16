@@ -77,4 +77,32 @@ const userProfile = async (req,res,next) => {
         next(error)
     }
 }
-export {registerUser, loginUser, userProfile};
+
+const updateUserProfile = async (req,res,next) => {
+    try {
+        let user = await User.findById(req.user._id);
+        if(!user){
+            throw new Error("User not Found!");
+        }
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
+        user.verified = req.body.verified || user.verified;
+        if(req.body.password && (req.body.password.length < 6 && req.body.password.length > 15)) {
+            throw new Error("Password length must be between 6 to 15 characters in length")
+        } else if (req.body.password) {
+            user.password = req.body.password;
+        }
+        const updatedProfile = await user.save();
+        res.json({
+            _id: updatedProfile._id,
+            name: updatedProfile.name,
+            email: updatedProfile.email,
+            verified: updatedProfile.verified,
+            admin: updatedProfile.admin,
+            token : await updatedProfile.generateJWT()
+        })
+        } catch (error) {
+        next(error);
+    }
+}
+export {registerUser, loginUser, userProfile, updateUserProfile};
